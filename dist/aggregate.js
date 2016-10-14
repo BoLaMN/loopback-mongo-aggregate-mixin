@@ -17,15 +17,16 @@ module.exports = function(Model) {
     return doc;
   };
   Model.aggregate = function(filter, options, callback) {
-    var aggregate, collection, connector, cursor, where;
+    var aggregate, collection, connector, cursor, model, where;
     connector = this.getConnector();
-    debug('aggregate', Model.modelName);
+    model = Model.modelName;
+    debug('aggregate', model);
     if (!filter.aggregate) {
       return callback(new Error('no aggregate filter'));
     }
     aggregate = new Aggregate(filter.aggregate);
     if (filter.where) {
-      where = connector.buildWhere(Model, filter.where);
+      where = connector.buildWhere(model, filter.where);
       aggregate.pipeline.unshift({
         '$match': where
       });
@@ -37,7 +38,7 @@ module.exports = function(Model) {
     if (filter.sort) {
       aggregate.sort(connector.buildSort(filter.sort));
     }
-    collection = connector.collection(Model.modelName);
+    collection = connector.collection(model);
     cursor = aggregate.exec(collection);
     if (filter.limit) {
       cursor.limit(filter.limit);
@@ -48,7 +49,7 @@ module.exports = function(Model) {
       cursor.skip(filter.offset);
     }
     return cursor.toArray(function(err, data) {
-      debug('aggregate', Model.modelName, filter, err, data);
+      debug('aggregate', model, filter, err, data);
       return callback(err, data.map(rewriteId));
     });
   };

@@ -14,8 +14,9 @@ module.exports = (Model) ->
 
   Model.aggregate = (filter, options, callback) ->
     connector = @getConnector()
+    model = Model.modelName
 
-    debug 'aggregate', Model.modelName
+    debug 'aggregate', model
 
     if not filter.aggregate
       return callback new Error 'no aggregate filter'
@@ -23,7 +24,7 @@ module.exports = (Model) ->
     aggregate = new Aggregate filter.aggregate
 
     if filter.where
-      where = connector.buildWhere Model, filter.where
+      where = connector.buildWhere model, filter.where
 
       aggregate.pipeline.unshift '$match': where
 
@@ -35,7 +36,7 @@ module.exports = (Model) ->
     if filter.sort
       aggregate.sort connector.buildSort filter.sort
 
-    collection = connector.collection Model.modelName
+    collection = connector.collection model
 
     cursor = aggregate.exec collection
 
@@ -48,7 +49,7 @@ module.exports = (Model) ->
       cursor.skip filter.offset
 
     cursor.toArray (err, data) ->
-      debug 'aggregate', Model.modelName, filter, err, data
+      debug 'aggregate', model, filter, err, data
 
       callback err, data.map rewriteId
 
