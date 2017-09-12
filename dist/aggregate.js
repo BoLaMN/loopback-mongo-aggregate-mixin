@@ -63,11 +63,14 @@
       if (callback) {
         return cursor.toArray(function(err, data) {
           debug('result', model, filter, err, data);
-          return callback(err, data.map(rewriteId));
+          if (data) {
+            data = data.map(rewriteId);
+          }
+          return callback(err, data);
         });
       } else {
         return cursor.toArray().then(function(data) {
-          debug('result', model, filter, err, data);
+          debug('result', model, filter, data);
           return data.map(rewriteId);
         });
       }
