@@ -56,12 +56,12 @@ module.exports = (Model) ->
     if callback
       cursor.toArray (err, data) ->
         debug 'result', model, filter, err, data
-
-        callback err, data.map rewriteId
+        data = data.map rewriteId if data
+        callback err, data
     else
       cursor.toArray()
       .then (data)->
-        debug 'result', model, filter, err, data
+        debug 'result', model, filter, data
         data.map rewriteId
 
   Model.remoteMethod 'aggregate',
