@@ -27,9 +27,15 @@ module.exports = function(Model) {
     aggregate = new Aggregate(filter.aggregate);
     if (filter.where) {
       where = connector.buildWhere(model, filter.where);
-      aggregate.pipeline.unshift({
-        '$match': where
-      });
+      if (filter.aggregate.geoNear) {
+        aggregate.pipeline.push({
+          $match: where
+        });
+      } else {
+        aggregate.pipeline.unshift({
+          $match: where
+        });
+      }
     }
     debug('all.aggregate', aggregate.pipeline);
     if (filter.fields) {
