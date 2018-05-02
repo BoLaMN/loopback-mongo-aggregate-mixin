@@ -45,13 +45,13 @@ module.exports = (Model) ->
 
     cursor = aggregate.exec collection
 
-    if filter.limit
-      cursor.limit filter.limit
-
     if filter.skip
-      cursor.skip filter.skip
+      cursor = cursor.skip filter.skip
     else if filter.offset
-      cursor.skip filter.offset
+      cursor = cursor.skip filter.offset
+
+    if filter.limit
+      cursor = cursor.limit filter.limit
 
     if callback
       cursor.toArray (err, data) ->
