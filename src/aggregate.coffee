@@ -12,14 +12,19 @@ module.exports = (Model) ->
 
     doc
 
-  Model.aggregate = (filter, options, callback) ->
+  Model.aggregate = (filter) ->
+    callback = arguments[arguments.length-1]
+    callback = null unless typeof callback is 'function'
     connector = @getConnector()
     model = Model.modelName
 
     debug 'aggregate', model
 
     if not filter.aggregate
-      return callback new Error 'no aggregate filter'
+      if callback
+        return callback new Error 'no aggregate filter'
+      else
+        return new Promise (resolve, reject)->reject new Error 'no aggregate filter'
 
     aggregate = new Aggregate filter.aggregate
 
@@ -40,29 +45,30 @@ module.exports = (Model) ->
 
     cursor = aggregate.exec collection
 
-    if filter.limit
-      cursor.limit filter.limit
-
     if filter.skip
-      cursor.skip filter.skip
+      cursor = cursor.skip filter.skip
     else if filter.offset
-      cursor.skip filter.offset
+      cursor = cursor.skip filter.offset
 
-    cursor.toArray (err, data) ->
-      debug 'aggregate', model, filter, err, data
+    if filter.limit
+      cursor = cursor.limit filter.limit
 
-      callback err, data.map rewriteId
+    if callback
+      cursor.toArray (err, data) ->
+        debug 'result', model, filter, err, data
+        data = data.map rewriteId if data
+        callback err, data
+    else
+      cursor.toArray()
+      .then (data)->
+        debug 'result', model, filter, data
+        data.map rewriteId
 
   Model.remoteMethod 'aggregate',
     accepts: [
       {
         arg: "filter"
         description: "Filter defining fields, where, aggregate, order, offset, and limit"
-        type: "object"
-      }
-      {
-        arg: "options"
-        description: "options"
         type: "object"
       }
     ]
